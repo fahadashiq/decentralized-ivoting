@@ -1,0 +1,24 @@
+{
+  "name": "web3-practice",
+  "version": "1.0.0",
+  "description": "Testing web3.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Fahad Ashiq",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.0",
+    "config": "^3.3.7",
+    "express": "^4.17.3",
+    "express-pino-logger": "^7.0.0",
+    "http-status-codes": "^2.2.0",
+    "logrotator": "^1.1.0",
+    "pino": "^7.10.0",
+    "pino-pretty": "^7.6.1",
+    "pino-tee": "^0.3.0",
+    "request": "^2.88.2",
+    "web3": "^1.7.3"
+  }
+}
