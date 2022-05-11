@@ -1,6 +1,5 @@
 var WEB3 = require('web3');
-var HttpStatus = require('http-status-codes');
-
+const HttpStatus = require('http-status-codes');
 
 var url = 'http://localhost:7545';
 var accountAddress = '0xdeD74C9017812bdd518453ea666399FE9433F757';

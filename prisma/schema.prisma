@@ -1,0 +1,53 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Data model
+model Campaign {
+  id              Int      @id @default(autoincrement())
+  code            String   @unique
+  name            String   @unique
+  start_date_time DateTime?
+  end_date_time   DateTime?
+  areas           Area[] //@relation(fields:  [id], references: [id]) // first one is area and second campaign
+}
+
+model Area {
+  id         Int         @id @default(autoincrement())
+  code       String      @unique
+  name       String      @unique
+  candidates Candidate[] //@relation(fields:  [authorId], references: [id])
+  Campaign   Campaign?   @relation(fields: [campaignId], references: [id])
+  campaignId Int?
+}
+
+model Candidate {
+  id   Int    @id @default(autoincrement())
+  code String @unique
+  name String @unique
+  sign String @unique
+
+  Area   Area? @relation(fields: [areaId], references: [id])
+  areaId Int?
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  name     String?
+  password String
+}
+
+model CandidateList {
+  id         Int     @id @default(autoincrement())
+  nic_number String  @unique
+  canVote    Boolean @default(true)
+}
