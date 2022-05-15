@@ -1,223 +1,13 @@
 var WEB3 = require('web3');
 const HttpStatus = require('http-status-codes');
+var config = require('config');
 
-var url = 'http://localhost:7545';
-var accountAddress = '0xdeD74C9017812bdd518453ea666399FE9433F757';
-var web3 = new WEB3(url);
+const accountAddress = config.get("ACCOUNT_ADDRESS");
+const web3 = new WEB3(config.get("BLOCKCHAIN_URL"));
+const abi = require('../../../contract/abi.json');
 
-const abi = [
-  {
-    "inputs": [],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "campaignName",
-        "type": "string"
-      }
-    ],
-    "name": "addCampaign",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "campaignName",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "candidateName",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "candidateSign",
-        "type": "string"
-      }
-    ],
-    "name": "addCandidate",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "admin",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "name": "campaigns",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "name",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "compaignNames",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getAllCompainNames",
-    "outputs": [
-      {
-        "internalType": "string[]",
-        "name": "campaignNames",
-        "type": "string[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "campaignName",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "candidateName",
-        "type": "string"
-      }
-    ],
-    "name": "getCandidateVotes",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "votes",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getNumResult",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "res",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "campaignName",
-        "type": "string"
-      }
-    ],
-    "name": "getcompaignInfo",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "string",
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "components": [
-              {
-                "internalType": "string",
-                "name": "name",
-                "type": "string"
-              },
-              {
-                "internalType": "string",
-                "name": "sign",
-                "type": "string"
-              },
-              {
-                "internalType": "uint256",
-                "name": "votes",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct Voting.Candidate[]",
-            "name": "candidates",
-            "type": "tuple[]"
-          }
-        ],
-        "internalType": "struct Voting.Campaign",
-        "name": "campaign",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "campaignName",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "candidateName",
-        "type": "string"
-      }
-    ],
-    "name": "voteForCandidate",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }
-];
 
-const contractAddress = '0xd09e5620409C4636c70Cc19aeeed2287490aa95C';
-const votingContract = new web3.eth.Contract(abi, contractAddress);
+const votingContract = new web3.eth.Contract(abi, config.get("CONTRACT_ADDRESS"));
 
 class VotingService {
   async getAccountInfo(response) {
@@ -255,40 +45,142 @@ class VotingService {
   }*/
 
 
-  async createElectionCampaign(request, response) {
-    let res;
-    const results = await votingContract.methods.addCampaign(request.body.name).send({from:accountAddress, gas: 3000000}, (err, result) => {
+  createElectionCampaign(request, response) {
+
+    var startingDateTime = new Date(request.body.startDateTime).getTime() / 1000;
+    var endingDateTime = new Date(request.body.endDateTime).getTime() / 1000;
+
+
+    if (isNaN(startingDateTime) || isNaN(endingDateTime)) {
+      response.status(HttpStatus.BAD_REQUEST).send({ "error": "Provide date time in right format. Example will be 2022-05-15T13:36:32"});
+    }
+    else {
+      votingContract.methods.addCampaign(request.body.code, request.body.name, startingDateTime, endingDateTime).send({from:accountAddress, gas: 3000000}, (err, result) => {
+        if (err) {
+          console.log(err);
+        }
+        else {
+          response.status(HttpStatus.OK).send({ "result": result});
+        }
+      }).catch( err => {
+        response.status(HttpStatus.BAD_REQUEST).send({ "error": err.data[Object.keys(err.data)[0]].reason});
+      });
+    }
+
+  }
+
+  addAreaToCampaign(request, response) {
+    votingContract.methods.addAreas(request.body.campaignCode, request.body.areaCode, request.body.areaName).send({from:accountAddress, gas: 3000000}, (err, result) => {
       if (err) {
         console.log(err);
       }
-      res = result;
+      else {
+        response.status(HttpStatus.OK).send({ "result": result});
+      }
+    }).catch( err => {
+      response.status(HttpStatus.BAD_REQUEST).send({ "error": err.data[Object.keys(err.data)[0]].reason});
     });
-
-    response.status(HttpStatus.OK).send({ "result": res});
   }
 
   async addCandidate(request, response) {
-    let res;
-    const results = await votingContract.methods.addCandidate(request.body.campaign_name, request.body.name, request.body.sign).send({from:accountAddress, gas: 3000000}, (err, result) => {
+    votingContract.methods.addCandidate(request.body.campaignCode, request.body.areaCode, request.body.candidateCode, request.body.candidateName, request.body.candidateSign).send({from:accountAddress, gas: 3000000}, (err, result) => {
       if (err) {
         console.log(err);
       }
-      res = result;
+      else {
+        response.status(HttpStatus.OK).send({ "result": result});
+      }
+    }).catch( err => {
+      response.status(HttpStatus.BAD_REQUEST).send({ "error": err.data[Object.keys(err.data)[0]].reason});
     });
-
-    response.status(HttpStatus.OK).send({ "result": res});
   }
 
   async voteForCandidate(request, response) {
-    let res;
-    const results = await votingContract.methods.voteForCandidate(request.body.campaign_name, request.body.name).send({from:accountAddress, gas: 3000000}, (err, result) => {
+    votingContract.methods.voteForCandidate(request.body.campaignCode, request.body.areaCode, request.body.candidateCode, request.body.voterId).send({from:accountAddress, gas: 3000000}, (err, result) => {
       if (err) {
         console.log(err);
       }
-      res = result;
+      else {
+        response.status(HttpStatus.OK).send({ "result": result});
+      }
+    }).catch( err => {
+      response.status(HttpStatus.BAD_REQUEST).send({ "error": err.data[Object.keys(err.data)[0]].reason});
     });
+  }
 
-    response.status(HttpStatus.OK).send({ "result": res});
+   getCampaignList(request, response) {
+     votingContract.methods.getCompaignsList().call({from:accountAddress}, (err, result) => {
+       if (err) {
+         console.log(err);
+       }
+       else {
+         response.status(HttpStatus.OK).send(this.parseCampaignResult(result));
+       }
+     }).catch( err => {
+       response.status(HttpStatus.BAD_REQUEST).send({ "error": err.data[Object.keys(err.data)[0]].reason});
+     });
+  }
+
+  parseCampaignResult(result) {
+    var campaigns = [];
+    result.forEach(res =>{
+      var campaign = {};
+      campaign.code = res.code;
+      campaign.name = res.name;
+      campaign.startDateTime =  new Date(res.startingDateTime * 1000).toISOString();
+      campaign.endDateTime = new Date(res.endingDateTime * 1000).toISOString();
+      campaigns.push(campaign);
+    })
+    return campaigns;
+  }
+
+  getAreaList(request, response) {
+    votingContract.methods.getAreasList(request.body.campaignCode).call({from:accountAddress}, (err, result) => {
+      if (err) {
+        console.log(err);
+      }
+      else {
+        response.status(HttpStatus.OK).send(this.parseAreaResult(result));
+      }
+    }).catch( err => {
+      response.status(HttpStatus.BAD_REQUEST).send({ "error": err.data[Object.keys(err.data)[0]].reason});
+    });
+  }
+
+  parseAreaResult(result) {
+    var areas = [];
+    result.forEach(res =>{
+      var area = {};
+      area.areaCode = res.code;
+      area.areaName = res.name;
+      areas.push(area);
+    })
+    return areas;
+  }
+
+  getCandidateList(request, response) {
+    votingContract.methods.getCandidatesList(request.body.campaignCode, request.body.areaCode).call({from:accountAddress}, (err, result) => {
+      if (err) {
+        console.log(err);
+      }
+      else {
+        response.status(HttpStatus.OK).send(this.parseCandidateResult(result));
+      }
+    }).catch( err => {
+      response.status(HttpStatus.BAD_REQUEST).send({ "error": err.data[Object.keys(err.data)[0]].reason});
+    });
+  }
+
+  parseCandidateResult(result) {
+    var areas = [];
+    result.forEach(res =>{
+      var area = {};
+      area.candidateCode = res.code;
+      area.candidateName = res.name;
+      area.candidateSign = res.sign;
+      areas.push(area);
+    })
+    return areas;
   }
 
   async getResults(request, response) {

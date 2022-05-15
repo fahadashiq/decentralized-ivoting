@@ -138,9 +138,22 @@ app.get('/db', function (req, res) {
   databaseClient.addToDatabase(res);
 });
 
+app.get('/time', function (req, res) {
+
+  // its 10 digits for blockchain 13 for js. appending/removing 3 zeros is necessary else it fails.
+  var date = new Date(1652618966000);
+  console.log(date.toUTCString());
+  console.log(Date.now());
+  res.status(HttpStatus.OK).send({ "isAlive": new Date("2022-05-15T13:36:32").toISOString()});
+  //res.status(HttpStatus.OK).send({ "isAlive": Date.now()});
+});
 
 app.post('/create-campaign', function (req, res) {
   votingService.createElectionCampaign(req, res);
+});
+
+app.post('/add-area', function (req, res) {
+  votingService.addAreaToCampaign(req, res);
 });
 
 app.post('/add-candidate', function (req, res) {
@@ -150,6 +163,23 @@ app.post('/add-candidate', function (req, res) {
 app.post('/vote', function (req, res) {
   votingService.voteForCandidate(req, res);
 });
+
+app.get('/campaign-list', function (req, res) {
+  votingService.getCampaignList(req, res);
+});
+
+app.get('/area-list', function (req, res) {
+  votingService.getAreaList(req, res);
+});
+
+app.get('/candidate-list', function (req, res) {
+  votingService.getCandidateList(req, res);
+});
+
+
+
+
+
 
 app.get('/details',authenticateJWT, function (req, res) {
   votingService.getResults(req, res);
