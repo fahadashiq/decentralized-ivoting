@@ -211,7 +211,7 @@ app.get('/add-child', function (req, res) {
  * Starting server.
  */
 
-app.listen(config.get("PORT"), function () {
+app.listen(process.env.PORT || config.get("PORT"), function () {
   logger.info('App listening on port: ' + config.get("PORT"));
   console.log('App listening on port: ' + config.get("PORT"));
 });
