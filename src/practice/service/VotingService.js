@@ -5,7 +5,7 @@ var config = require('config');
 const accountAddress = config.get("ACCOUNT_ADDRESS");
 const web3 = new WEB3(config.get("BLOCKCHAIN_URL"));
 const abi = require('../../../contract/abi.json');
-
+const { encrypt, decrypt } = require('./crypto');
 
 const votingContract = new web3.eth.Contract(abi, config.get("CONTRACT_ADDRESS"));
 
@@ -47,6 +47,9 @@ class VotingService {
 
   createElectionCampaign(request, response) {
 
+    if (request.body.code == undefined) request.body.code = "";
+    if (request.body.name == undefined) request.body.name = "";
+
     var startingDateTime = new Date(request.body.startDateTime).getTime() / 1000;
     var endingDateTime = new Date(request.body.endDateTime).getTime() / 1000;
 
@@ -70,6 +73,11 @@ class VotingService {
   }
 
   addAreaToCampaign(request, response) {
+
+    if (request.body.campaignCode == undefined) request.body.campaignCode = "";
+    if (request.body.areaCode == undefined) request.body.areaCode = "";
+    if (request.body.areaName == undefined) request.body.areaName = "";
+
     votingContract.methods.addAreas(request.body.campaignCode, request.body.areaCode, request.body.areaName).send({from:accountAddress, gas: 3000000}, (err, result) => {
       if (err) {
         console.log(err);
@@ -83,6 +91,12 @@ class VotingService {
   }
 
   async addCandidate(request, response) {
+    if (request.body.campaignCode == undefined) request.body.campaignCode = "";
+    if (request.body.areaCode == undefined) request.body.areaCode = "";
+    if (request.body.candidateCode == undefined) request.body.candidateCode = "";
+    if (request.body.candidateName == undefined) request.body.candidateName = "";
+    if (request.body.candidateSign == undefined) request.body.candidateSign = "";
+
     votingContract.methods.addCandidate(request.body.campaignCode, request.body.areaCode, request.body.candidateCode, request.body.candidateName, request.body.candidateSign).send({from:accountAddress, gas: 3000000}, (err, result) => {
       if (err) {
         console.log(err);
@@ -96,6 +110,11 @@ class VotingService {
   }
 
   async voteForCandidate(request, response) {
+    if (request.body.campaignCode == undefined) request.body.campaignCode = "";
+    if (request.body.areaCode == undefined) request.body.areaCode = "";
+    if (request.body.candidateCode == undefined) request.body.candidateCode = "";
+    if (request.body.voterId == undefined) request.body.voterId = "";
+
     votingContract.methods.voteForCandidate(request.body.campaignCode, request.body.areaCode, request.body.candidateCode, request.body.voterId).send({from:accountAddress, gas: 3000000}, (err, result) => {
       if (err) {
         console.log(err);
@@ -134,7 +153,51 @@ class VotingService {
     return campaigns;
   }
 
+  addVotersToVotingList(request, response) {
+
+    if (request.body.voterId == undefined) response.status(HttpStatus.BAD_REQUEST).send({ "error": "Voter id is required."});
+    if (request.body.areaCode == undefined) response.status(HttpStatus.BAD_REQUEST).send({ "error": "Area code is required."});
+
+    var voterRequest = {};
+    voterRequest.voterId = request.body.voterId;
+    voterRequest.areaCode = request.body.areaCode;
+    const hashcode = JSON.stringify(encrypt(JSON.stringify(voterRequest)));
+
+    votingContract.methods.addVoterToVotingList(request.body.voterId, hashcode).send({from:accountAddress, gas: 3000000}, (err, result) => {
+      if (err) {
+        console.log(err);
+      } else {
+        response.status(HttpStatus.OK).send({"result" : result});
+      }
+    }).catch(err => {
+      response.status(HttpStatus.BAD_REQUEST).send({"error": err.data[Object.keys(err.data)[0]].reason});
+    });
+  }
+
+  checkIfVoterCanVote(request, response) {
+
+    if (request.body.voterId == undefined) response.status(HttpStatus.BAD_REQUEST).send({ "error": "Voter id is required."});
+
+    votingContract.methods.getVoterHash(request.body.voterId).call({from:accountAddress}, (err, result) => {
+      if (err) {
+        console.log(err);
+      }
+      else {
+        response.status(HttpStatus.OK).send(this.parseVoterResult(result));
+      }
+    }).catch( err => {
+      response.status(HttpStatus.BAD_REQUEST).send({ "error": err.data[Object.keys(err.data)[0]].reason});
+    });
+  }
+
+  parseVoterResult(result) {
+    const hashcode = decrypt(JSON.parse(result));
+    return hashcode;
+  }
+
+
   getAreaList(request, response) {
+    if (request.body.campaignCode == undefined) request.body.campaignCode = "";
     votingContract.methods.getAreasList(request.body.campaignCode).call({from:accountAddress}, (err, result) => {
       if (err) {
         console.log(err);
@@ -159,6 +222,8 @@ class VotingService {
   }
 
   getCandidateList(request, response) {
+    if (request.body.campaignCode == undefined) request.body.campaignCode = "";
+    if (request.body.areaCode == undefined) request.body.areaCode = "";
     votingContract.methods.getCandidatesList(request.body.campaignCode, request.body.areaCode).call({from:accountAddress}, (err, result) => {
       if (err) {
         console.log(err);

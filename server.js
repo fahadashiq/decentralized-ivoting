@@ -160,6 +160,14 @@ app.post('/add-candidate', function (req, res) {
   votingService.addCandidate(req, res);
 });
 
+app.post('/add-voter', function (req, res) {
+  votingService.addVotersToVotingList(req, res);
+});
+
+app.get('/check-voter', function (req, res) {
+  votingService.checkIfVoterCanVote(req, res);
+});
+
 app.post('/vote', function (req, res) {
   votingService.voteForCandidate(req, res);
 });
