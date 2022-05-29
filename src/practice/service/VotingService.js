@@ -197,8 +197,8 @@ class VotingService {
 
 
   getAreaList(request, response) {
-    if (request.body.campaignCode == undefined) request.body.campaignCode = "";
-    votingContract.methods.getAreasList(request.body.campaignCode).call({from:accountAddress}, (err, result) => {
+    if (request.query.campaignCode == undefined) request.query.campaignCode = "";
+    votingContract.methods.getAreasList(request.query.campaignCode).call({from:accountAddress}, (err, result) => {
       if (err) {
         console.log(err);
       }
@@ -222,9 +222,9 @@ class VotingService {
   }
 
   getCandidateList(request, response) {
-    if (request.body.campaignCode == undefined) request.body.campaignCode = "";
-    if (request.body.areaCode == undefined) request.body.areaCode = "";
-    votingContract.methods.getCandidatesList(request.body.campaignCode, request.body.areaCode).call({from:accountAddress}, (err, result) => {
+    if (request.query.campaignCode == undefined) request.query.campaignCode = "";
+    if (request.query.areaCode == undefined) request.query.areaCode = "";
+    votingContract.methods.getCandidatesList(request.query.campaignCode, request.query.areaCode).call({from:accountAddress}, (err, result) => {
       if (err) {
         console.log(err);
       }
