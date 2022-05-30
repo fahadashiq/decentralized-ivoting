@@ -3,6 +3,7 @@ var config = require('config');
 var logger = require('./src/practice/helper/Logger');
 // create express app
 const app = express();
+const cors = require('cors');
 var HttpStatus = require('http-status-codes');
 
 const Web3Controller = require('./src/practice/service/Web3Controller')
@@ -18,6 +19,7 @@ const databaseClient = new DatabaseClient();
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 
+app.use(cors());
 app.use(bodyParser.json());
 app.use(logger.getExpressLogger());
 
