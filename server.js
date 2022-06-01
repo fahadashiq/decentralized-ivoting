@@ -12,6 +12,9 @@ const web3Controller = new Web3Controller();
 const VotingService = require('./src/practice/service/VotingService')
 const votingService = new VotingService();
 
+const UtilityService = require('./src/practice/service/UtilityService')
+const utilityService = new UtilityService();
+
 const DatabaseClient = require('./src/practice/repository/DatabaseClient')
 const databaseClient = new DatabaseClient();
 
@@ -136,10 +139,6 @@ const authenticateJWT = (req, res, next) => {
  */
 
 
-app.get('/db', function (req, res) {
-  databaseClient.addToDatabase(res);
-});
-
 app.get('/time', function (req, res) {
 
   // its 10 digits for blockchain 13 for js. appending/removing 3 zeros is necessary else it fails.
@@ -171,7 +170,15 @@ app.get('/check-voter', function (req, res) {
 });
 
 app.post('/vote', function (req, res) {
-  votingService.voteForCandidate(req, res);
+  if (req.body.token == undefined) res.status(HttpStatus.BAD_REQUEST).send("Token is required");
+  if (req.body.campaignCode == undefined) res.status(HttpStatus.BAD_REQUEST).send("Campaign code is required");
+  if (req.body.voterId == undefined) res.status(HttpStatus.BAD_REQUEST).send("Voter Id is required");
+  databaseClient.getToken(req.body.token, req.body.voterId, req.body.campaignCode, () => {
+        votingService.voteForCandidate(req, res);
+      },
+      () => {
+        res.status(HttpStatus.BAD_REQUEST).send("Invalid token");
+      });
 });
 
 app.get('/campaign-list', function (req, res) {
@@ -184,6 +191,26 @@ app.get('/area-list', function (req, res) {
 
 app.get('/candidate-list', function (req, res) {
   votingService.getCandidateList(req, res);
+});
+
+
+app.post('/authenticate-voter', function (req, res) {
+  if (req.body.userId == undefined) res.status(HttpStatus.BAD_REQUEST).send("User id is required.");
+  if (req.body.campaignCode == undefined) res.status(HttpStatus.BAD_REQUEST).send("Campaign code is required.");
+
+  if (utilityService.isUserValid(req.body.userId)) {
+    const accessToken = jwt.sign({ username: req.body.userId, role: "voter" }, accessTokenSecret, { expiresIn: '60m' });
+    databaseClient.addOrUpdateToken(accessToken, req.body.userId, req.body.campaignCode, () => {
+          res.status(HttpStatus.OK).send({'token': accessToken});
+        },
+        (msg) => {
+          res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(msg);
+
+        });
+  } else {
+    res.status(HttpStatus.UNAUTHORIZED).send("Voter Can't vote.");
+  }
+
 });
 
 
