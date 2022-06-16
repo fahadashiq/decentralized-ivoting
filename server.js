@@ -1,3 +1,6 @@
+const dotenv = require('dotenv');
+dotenv.config();
+
 const express = require('express');
 var config = require('config');
 var logger = require('./src/practice/helper/Logger');

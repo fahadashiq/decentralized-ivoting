@@ -1,8 +1,6 @@
-//const authToken = process.env.TWILIO_AUTH_TOKEN;
-//const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const HttpStatus = require("http-status-codes");
-const authToken = "642c4d0221b753636713865abcc6aec3";
-const accountSid = "AC17ab53f1eadcdcc6ec674b92be5e9f14";
 const serviceId = "VA0a2edad3cb59d5ba2a5305f058532c08";
 
 const client = require('twilio')(accountSid, authToken);
