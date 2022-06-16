@@ -36,12 +36,12 @@
       },
       {
         "internalType": "uint256",
-        "name": "startingDateTime",
+        "name": "startTime",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "endingDateTime",
+        "name": "endTime",
         "type": "uint256"
       }
     ],
@@ -102,9 +102,147 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "campaignCode",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "areaCode",
+        "type": "string"
+      }
+    ],
+    "name": "deleteArea",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "campaignCode",
+        "type": "string"
+      }
+    ],
+    "name": "deleteCampaign",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "campaignCode",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "areaCode",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "candidateCode",
+        "type": "string"
+      }
+    ],
+    "name": "deleteCandidate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "stateMutability": "nonpayable",
     "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "campaignCode",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "areaCode",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "areaName",
+        "type": "string"
+      }
+    ],
+    "name": "updateArea",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "campaignCode",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "campaignName",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "startTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "endTime",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateCampaign",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "campaignCode",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "areaCode",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "candidateCode",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "candidateName",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "candidateSign",
+        "type": "string"
+      }
+    ],
+    "name": "updateCandidate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
     "inputs": [
@@ -150,25 +288,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "campaignKeys",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "string",
         "name": "",
         "type": "string"
@@ -188,13 +307,37 @@
       },
       {
         "internalType": "uint256",
-        "name": "startingDateTime",
+        "name": "startTime",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "endingDateTime",
+        "name": "endTime",
         "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isDeleted",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "campKeys",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
       }
     ],
     "stateMutability": "view",
@@ -267,6 +410,11 @@
             "internalType": "uint256",
             "name": "votes",
             "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "isDeleted",
+            "type": "bool"
           }
         ],
         "internalType": "struct Voting.Candidate[]",
@@ -295,12 +443,12 @@
           },
           {
             "internalType": "uint256",
-            "name": "startingDateTime",
+            "name": "startTime",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "endingDateTime",
+            "name": "endTime",
             "type": "uint256"
           }
         ],
@@ -331,12 +479,17 @@
         "components": [
           {
             "internalType": "string",
-            "name": "candiateCode",
+            "name": "code",
             "type": "string"
           },
           {
             "internalType": "string",
-            "name": "candiateName",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "sign",
             "type": "string"
           },
           {
@@ -348,19 +501,6 @@
         "internalType": "struct Voting.ResultsDto[]",
         "name": "",
         "type": "tuple[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getTime",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "hashcode",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",

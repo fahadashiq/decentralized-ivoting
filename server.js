@@ -22,6 +22,9 @@ const databaseClient = new DatabaseClient();
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 
+const TwilioService = require('./src/practice/service/TwilioService');
+const twilioService = new TwilioService();
+
 app.use(cors());
 app.use(bodyParser.json());
 app.use(logger.getExpressLogger());
@@ -95,7 +98,7 @@ app.post('/token', (req, res) => {
       return res.sendStatus(403);
     }
 
-    const accessToken = jwt.sign({ username: user.username, role: user.role }, accessTokenSecret, { expiresIn: '20m' });
+    const accessToken = jwt.sign({ username: user.username, role: user.role }, accessTokenSecret, { expiresIn: '7200m' });
 
     res.json({
       accessToken
@@ -153,8 +156,24 @@ app.post('/create-campaign', function (req, res) {
   votingService.createElectionCampaign(req, res);
 });
 
+app.post('/update-campaign', function (req, res) {
+  votingService.updateElectionCampaign(req, res);
+});
+
+app.post('/delete-campaign', function (req, res) {
+  votingService.deleteElectionCampaign(req, res);
+});
+
 app.post('/add-area', function (req, res) {
   votingService.addAreaToCampaign(req, res);
+});
+
+app.post('/update-area', function (req, res) {
+  votingService.updateArea(req, res);
+});
+
+app.post('/delete-area', function (req, res) {
+  votingService.deleteArea(req, res);
 });
 
 app.post('/add-candidate', function (req, res) {
@@ -165,20 +184,24 @@ app.post('/add-voter', function (req, res) {
   votingService.addVotersToVotingList(req, res);
 });
 
-app.get('/check-voter', function (req, res) {
+app.post('/check-voter', function (req, res) {
   votingService.checkIfVoterCanVote(req, res);
 });
 
 app.post('/vote', function (req, res) {
-  if (req.body.token == undefined) res.status(HttpStatus.BAD_REQUEST).send("Token is required");
-  if (req.body.campaignCode == undefined) res.status(HttpStatus.BAD_REQUEST).send("Campaign code is required");
-  if (req.body.voterId == undefined) res.status(HttpStatus.BAD_REQUEST).send("Voter Id is required");
-  databaseClient.getToken(req.body.token, req.body.voterId, req.body.campaignCode, () => {
-        votingService.voteForCandidate(req, res);
-      },
-      () => {
-        res.status(HttpStatus.BAD_REQUEST).send("Invalid token");
-      });
+  if (req.body.token === undefined) res.status(HttpStatus.BAD_REQUEST).send("Token is required");
+  if (req.body.campaignCode === undefined) res.status(HttpStatus.BAD_REQUEST).send("Campaign code is required");
+  if (req.body.voterId === undefined) res.status(HttpStatus.BAD_REQUEST).send("Voter Id is required");
+  if (req.body.otp === undefined) res.status(HttpStatus.BAD_REQUEST).send("OTP is required");
+  utilityService.verifyVoterBeforeVoting(req, res,(req, res)=> {
+    databaseClient.getToken(req.body.token, req.body.voterId, req.body.campaignCode, () => {
+          votingService.voteForCandidate(req, res);
+        },
+        () => {
+          res.status(HttpStatus.BAD_REQUEST).send("Invalid token");
+        });
+  });
+
 });
 
 app.get('/campaign-list', function (req, res) {
@@ -195,21 +218,20 @@ app.get('/candidate-list', function (req, res) {
 
 
 app.post('/authenticate-voter', function (req, res) {
-  if (req.body.userId == undefined) res.status(HttpStatus.BAD_REQUEST).send("User id is required.");
+  if (req.body.voterId == undefined) res.status(HttpStatus.BAD_REQUEST).send("User id is required.");
   if (req.body.campaignCode == undefined) res.status(HttpStatus.BAD_REQUEST).send("Campaign code is required.");
+  if (req.body.areaCode == undefined) res.status(HttpStatus.BAD_REQUEST).send("Area code is required.");
 
-  if (utilityService.isUserValid(req.body.userId)) {
-    const accessToken = jwt.sign({ username: req.body.userId, role: "voter" }, accessTokenSecret, { expiresIn: '60m' });
-    databaseClient.addOrUpdateToken(accessToken, req.body.userId, req.body.campaignCode, () => {
+  utilityService.validateUser(req, res,  (req, res) => {
+    const accessToken = jwt.sign({ username: req.body.voterId, role: "voter" }, accessTokenSecret, { expiresIn: '60m' });
+    databaseClient.addOrUpdateToken(accessToken, req.body.voterId, req.body.campaignCode, () => {
           res.status(HttpStatus.OK).send({'token': accessToken});
         },
         (msg) => {
           res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(msg);
 
         });
-  } else {
-    res.status(HttpStatus.UNAUTHORIZED).send("Voter Can't vote.");
-  }
+  });
 
 });
 

@@ -47,7 +47,9 @@ class VotingService {
 
   createElectionCampaign(request, response) {
 
-    if (request.body.code == undefined) request.body.code = "";
+    if (!request.body.code) return response.status(HttpStatus.BAD_REQUEST).send({ "error": "campaign code required"});
+    if (!request.body.startDateTime) return response.status(HttpStatus.BAD_REQUEST).send({ "error": "Starting date time required"});
+    if (!request.body.endDateTime) return response.status(HttpStatus.BAD_REQUEST).send({ "error": "Ending date time required"});
     if (request.body.name == undefined) request.body.name = "";
 
     var startingDateTime = new Date(request.body.startDateTime).getTime() / 1000;
@@ -55,7 +57,7 @@ class VotingService {
 
 
     if (isNaN(startingDateTime) || isNaN(endingDateTime)) {
-      response.status(HttpStatus.BAD_REQUEST).send({ "error": "Provide date time in right format. Example will be 2022-05-15T13:36:32"});
+      return response.status(HttpStatus.BAD_REQUEST).send({ "error": "Provide date time in right format. Example will be 2022-05-15T13:36:32"});
     }
     else {
       votingContract.methods.addCampaign(request.body.code, request.body.name, startingDateTime, endingDateTime).send({from:accountAddress, gas: 3000000}, (err, result) => {
@@ -72,11 +74,56 @@ class VotingService {
 
   }
 
+  updateElectionCampaign(request, response) {
+
+    if (!request.body.code) return response.status(HttpStatus.BAD_REQUEST).send({ "error": "campaign code required"});
+    if (request.body.name == undefined) request.body.name = "";
+
+    var startingDateTime = request.body.startDateTime == undefined ? 0 : new Date(request.body.startDateTime).getTime() / 1000;
+    var endingDateTime = request.body.endDateTime == undefined ?  0 : new Date(request.body.endDateTime).getTime() / 1000;
+
+
+    if (isNaN(startingDateTime) || isNaN(endingDateTime)) {
+      return response.status(HttpStatus.BAD_REQUEST).send({ "error": "Provide date time in right format. Example will be 2022-05-15T13:36:32"});
+    }
+    else {
+      votingContract.methods.updateCampaign(request.body.code, request.body.name, startingDateTime, endingDateTime).send({from:accountAddress, gas: 3000000}, (err, result) => {
+        if (err) {
+          console.log(err);
+        }
+        else {
+          response.status(HttpStatus.OK).send({ "result": result});
+        }
+      }).catch( err => {
+        response.status(HttpStatus.BAD_REQUEST).send({ "error": err.data[Object.keys(err.data)[0]].reason});
+      });
+    }
+
+  }
+
+  deleteElectionCampaign(request, response) {
+
+    if (!request.body.code) return response.status(HttpStatus.BAD_REQUEST).send({ "error": "campaign code required"});
+
+    votingContract.methods.deleteCampaign(request.body.code).send({from:accountAddress, gas: 3000000}, (err, result) => {
+      if (err) {
+        console.log(err);
+      }
+      else {
+        response.status(HttpStatus.OK).send({ "result": result});
+      }
+    }).catch( err => {
+      response.status(HttpStatus.BAD_REQUEST).send({ "error": err.data[Object.keys(err.data)[0]].reason});
+    });
+
+
+  }
+
   addAreaToCampaign(request, response) {
 
-    if (request.body.campaignCode == undefined) request.body.campaignCode = "";
-    if (request.body.areaCode == undefined) request.body.areaCode = "";
-    if (request.body.areaName == undefined) request.body.areaName = "";
+    if (!request.body.campaignCode)  return response.status(HttpStatus.BAD_REQUEST).send({ "error": "campaign code required"});
+    if (!request.body.areaCode)  return response.status(HttpStatus.BAD_REQUEST).send({ "error": "area code required"});
+    if (!request.body.areaName) request.body.areaName = "";
 
     votingContract.methods.addAreas(request.body.campaignCode, request.body.areaCode, request.body.areaName).send({from:accountAddress, gas: 3000000}, (err, result) => {
       if (err) {
@@ -89,6 +136,42 @@ class VotingService {
       response.status(HttpStatus.BAD_REQUEST).send({ "error": err.data[Object.keys(err.data)[0]].reason});
     });
   }
+
+  updateArea(request, response) {
+
+    if (!request.body.campaignCode)  return response.status(HttpStatus.BAD_REQUEST).send({ "error": "campaign code required"});
+    if (!request.body.areaCode)  return response.status(HttpStatus.BAD_REQUEST).send({ "error": "area code required"});
+    if (!request.body.areaName) request.body.areaName = "";
+
+    votingContract.methods.updateArea(request.body.campaignCode, request.body.areaCode, request.body.areaName).send({from:accountAddress, gas: 3000000}, (err, result) => {
+      if (err) {
+        console.log(err);
+      }
+      else {
+        response.status(HttpStatus.OK).send({ "result": result});
+      }
+    }).catch( err => {
+      response.status(HttpStatus.BAD_REQUEST).send({ "error": err.data[Object.keys(err.data)[0]].reason});
+    });
+  }
+
+  deleteArea(request, response) {
+
+    if (!request.body.campaignCode)  return response.status(HttpStatus.BAD_REQUEST).send({ "error": "campaign code required"});
+    if (!request.body.areaCode)  return response.status(HttpStatus.BAD_REQUEST).send({ "error": "area code required"});
+
+    votingContract.methods.deleteArea(request.body.campaignCode, request.body.areaCode).send({from:accountAddress, gas: 3000000}, (err, result) => {
+      if (err) {
+        console.log(err);
+      }
+      else {
+        response.status(HttpStatus.OK).send({ "result": result});
+      }
+    }).catch( err => {
+      response.status(HttpStatus.BAD_REQUEST).send({ "error": err.data[Object.keys(err.data)[0]].reason});
+    });
+  }
+
 
   async addCandidate(request, response) {
     if (request.body.campaignCode == undefined) request.body.campaignCode = "";
@@ -143,12 +226,14 @@ class VotingService {
   parseCampaignResult(result) {
     var campaigns = [];
     result.forEach(res =>{
-      var campaign = {};
-      campaign.code = res.code;
-      campaign.name = res.name;
-      campaign.startDateTime =  new Date(res.startingDateTime * 1000).toISOString();
-      campaign.endDateTime = new Date(res.endingDateTime * 1000).toISOString();
-      campaigns.push(campaign);
+      if (res.code) {
+        var campaign = {};
+        campaign.code = res.code;
+        campaign.name = res.name;
+        campaign.startDateTime =  new Date(res.startTime * 1000).toISOString();
+        campaign.endDateTime = new Date(res.endTime * 1000).toISOString();
+        campaigns.push(campaign);
+      }
     })
     return campaigns;
   }
@@ -157,10 +242,12 @@ class VotingService {
 
     if (request.body.voterId == undefined) response.status(HttpStatus.BAD_REQUEST).send({ "error": "Voter id is required."});
     if (request.body.areaCode == undefined) response.status(HttpStatus.BAD_REQUEST).send({ "error": "Area code is required."});
+    if (request.body.phoneNumber == undefined) response.status(HttpStatus.BAD_REQUEST).send({ "error": "Phone number is required."});
 
     var voterRequest = {};
     voterRequest.voterId = request.body.voterId;
     voterRequest.areaCode = request.body.areaCode;
+    voterRequest.phoneNumber = request.body.phoneNumber;
     const hashcode = JSON.stringify(encrypt(JSON.stringify(voterRequest)));
 
     votingContract.methods.addVoterToVotingList(request.body.voterId, hashcode).send({from:accountAddress, gas: 3000000}, (err, result) => {
@@ -190,6 +277,21 @@ class VotingService {
     });
   }
 
+
+  getVoterRecord(request, response, successCallback) {
+
+    votingContract.methods.getVoterHash(request.body.voterId).call({from:accountAddress}, (err, result) => {
+      if (err) {
+        console.log(err);
+      }
+      else {
+         successCallback(request, response, this.parseVoterResult(result));
+      }
+    }).catch( err => {
+      response.status(HttpStatus.BAD_REQUEST).send({ "error": err.data[Object.keys(err.data)[0]].reason});
+    });
+  }
+
   parseVoterResult(result) {
     const hashcode = decrypt(JSON.parse(result));
     return hashcode;
@@ -213,10 +315,12 @@ class VotingService {
   parseAreaResult(result) {
     var areas = [];
     result.forEach(res =>{
-      var area = {};
-      area.areaCode = res.code;
-      area.areaName = res.name;
-      areas.push(area);
+      if (res.code) {
+        var area = {};
+        area.areaCode = res.code;
+        area.areaName = res.name;
+        areas.push(area);
+      }
     })
     return areas;
   }
