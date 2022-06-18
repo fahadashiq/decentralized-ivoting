@@ -46,12 +46,16 @@ const refreshTokenSecret = 'somerandomstringforrefreshtoken';
 
 const users = [
   {
+    name: 'John Smith',
     username: 'john',
     password: 'password123admin',
+    email: 'test@test.com',
     role: 'admin'
   }, {
+    name: 'Anna Smith',
     username: 'anna',
     password: 'password123member',
+    email: 'test1@test.com',
     role: 'member'
   }
 ]
@@ -74,10 +78,12 @@ app.post('/login', (req, res) => {
     const refreshToken = jwt.sign({ username: user.username, role: user.role }, refreshTokenSecret);
 
     refreshTokens.push(refreshToken);
-
     res.json({
       accessToken,
-      refreshToken
+      refreshToken,
+      "name": user.name,
+      "username": user.username,
+      "email": user.email
     });
   } else {
     res.send('Username or password incorrect');
