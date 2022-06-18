@@ -24,7 +24,16 @@ class UtilityService {
   }
 
   verifyVoterBeforeVoting(request, response, successCallback) {
-    twilioService.verifyOtp(request, response, successCallback);
+    votingService.getVoterRecord(request, response, (request, response, record) => {
+      if (!record) {
+        response.status(HttpStatus.BAD_REQUEST).send({ "error": "Voter record doen't exist"});
+      }
+      if (JSON.parse(record)["areaCode"] != request.body.areaCode) {
+        response.status(HttpStatus.BAD_REQUEST).send({ "error": "Voter Can't vote in this area. Can vote in : " + JSON.parse(record)["areaCode"]});
+      } else {
+        twilioService.verifyOtp(request, response, successCallback, JSON.parse(record)["phoneNumber"]);
+      }
+    });
   }
 
 }

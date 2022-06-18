@@ -24,13 +24,13 @@ class TwilioService {
         });
     }
 
-    verifyOtp(request, response, successCallback) {
+    verifyOtp(request, response, successCallback, phoneNumber) {
         client
             .verify
             .services(serviceId)
             .verificationChecks
             .create({
-                to: `+4915781250690`,
+                to: phoneNumber,
                 code: request.body.otp
             })
             .then(data => {
