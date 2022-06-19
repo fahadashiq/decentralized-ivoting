@@ -192,6 +192,25 @@ class VotingService {
     });
   }
 
+  async updateCandidate(request, response) {
+    if (request.body.campaignCode == undefined)  return response.status(HttpStatus.BAD_REQUEST).send({ "error": "campaign code required"});
+    if (request.body.areaCode == undefined)  return response.status(HttpStatus.BAD_REQUEST).send({ "error": "area code required"});
+    if (request.body.candidateCode == undefined) return response.status(HttpStatus.BAD_REQUEST).send({ "error": "candidate code required"});
+    if (request.body.candidateName == undefined) request.body.candidateName = "";
+    if (request.body.candidateSign == undefined) request.body.candidateSign = "";
+
+    votingContract.methods.updateCandidate(request.body.campaignCode, request.body.areaCode, request.body.candidateCode, request.body.candidateName, request.body.candidateSign).send({from:accountAddress, gas: 3000000}, (err, result) => {
+      if (err) {
+        console.log(err);
+      }
+      else {
+        response.status(HttpStatus.OK).send({ "result": result});
+      }
+    }).catch( err => {
+      response.status(HttpStatus.BAD_REQUEST).send({ "error": err.data[Object.keys(err.data)[0]].reason});
+    });
+  }
+
   async voteForCandidate(request, response) {
     if (request.body.campaignCode == undefined) request.body.campaignCode = "";
     if (request.body.areaCode == undefined) request.body.areaCode = "";
@@ -352,6 +371,19 @@ class VotingService {
     return areas;
   }
 
+  parseResult(result) {
+    var areas = [];
+    result.forEach(res =>{
+      var area = {};
+      area.code = res.code;
+      area.name = res.name;
+      area.sign = res.sign;
+      area.votes = res.votes;
+      areas.push(area);
+    })
+    return areas;
+  }
+
   async getResults(request, response) {
     let res;
     // const results = await votingContract.methods.getNumResult().call({from:accountAddress}, (err, result) => {
@@ -360,14 +392,16 @@ class VotingService {
     //   }
     //   res = result;
     // });
-    const results = await votingContract.methods.getcompaignInfo(request.body.name).call({from:accountAddress}, (err, result) => {
+   votingContract.methods.getResults(request.body.campaignCode, request.body.areaCode).call({from:accountAddress}, (err, result) => {
       if (err) {
         console.log(err);
       }
-      res = result;
+      else {
+        response.status(HttpStatus.OK).send(this.parseResult(result));
+      }
+    }).catch( err => {
+      response.status(HttpStatus.BAD_REQUEST).send({ "error": err.data[Object.keys(err.data)[0]].reason});
     });
-
-    response.status(HttpStatus.OK).send({ "result": res});
   }
 
 }

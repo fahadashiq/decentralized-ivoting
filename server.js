@@ -169,6 +169,10 @@ app.post('/update-campaign', function (req, res) {
   votingService.updateElectionCampaign(req, res);
 });
 
+app.post('/update-candidate', function (req, res) {
+  votingService.updateCandidate(req, res);
+});
+
 app.post('/delete-campaign', function (req, res) {
   votingService.deleteElectionCampaign(req, res);
 });
@@ -249,7 +253,11 @@ app.post('/authenticate-voter', function (req, res) {
 
 
 
-app.get('/details',authenticateJWT, function (req, res) {
+app.get('/details', function (req, res) {
+  votingService.getResults(req, res);
+});
+
+app.get('/detail',authenticateJWT, function (req, res) {
   votingService.getResults(req, res);
 });
 
