@@ -392,7 +392,10 @@ class VotingService {
     //   }
     //   res = result;
     // });
-   votingContract.methods.getResults(request.body.campaignCode, request.body.areaCode).call({from:accountAddress}, (err, result) => {
+
+    if (request.query.campaignCode == undefined) response.status(HttpStatus.BAD_REQUEST).send({ "error": "Campaign Code id is required."});
+    if (request.query.areaCode == undefined) response.status(HttpStatus.BAD_REQUEST).send({ "error": "Area code is required."});
+   votingContract.methods.getResults(request.query.campaignCode, request.query.areaCode).call({from:accountAddress}, (err, result) => {
       if (err) {
         console.log(err);
       }
