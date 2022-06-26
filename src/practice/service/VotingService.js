@@ -393,8 +393,8 @@ class VotingService {
     //   res = result;
     // });
 
-    if (request.query.campaignCode == undefined) response.status(HttpStatus.BAD_REQUEST).send({ "error": "Campaign Code id is required."});
-    if (request.query.areaCode == undefined) response.status(HttpStatus.BAD_REQUEST).send({ "error": "Area code is required."});
+    if (request.query.campaignCode == undefined) return response.status(HttpStatus.BAD_REQUEST).send({ "error": "Campaign Code id is required."});
+    if (request.query.areaCode == undefined) return response.status(HttpStatus.BAD_REQUEST).send({ "error": "Area code is required."});
    votingContract.methods.getResults(request.query.campaignCode, request.query.areaCode).call({from:accountAddress}, (err, result) => {
       if (err) {
         console.log(err);
