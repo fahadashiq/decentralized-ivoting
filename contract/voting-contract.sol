@@ -354,7 +354,6 @@ contract Voting {
         require(bytes(campaigns[campaignCode].code).length != 0, 'Campaign not found');
         require(bytes(areaCode).length != 0, 'Area Code required');
         require(bytes(campaigns[campaignCode].areas[areaCode].code).length != 0, 'Area not found');
-        require(block.timestamp > campaigns[campaignCode].endTime, 'Campaign not ended');
 
         ResultsDto[] memory resultList = new ResultsDto[](campaigns[campaignCode].areas[areaCode].candidates.length);
 
